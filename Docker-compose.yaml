@@ -1,0 +1,116 @@
+version: "3.8"
+
+services:
+  api:
+    build: ./Ingestion_srvice
+    container_name: app
+    ports:
+      - "8000:8000"
+    volumes:
+      - "C:/Users/user/Downloads/tweet_images:/tweet_images"
+    environment:
+      PYTHONUNBUFFERED: 1
+      PROJECT_DIR: /app/tweet_images
+      TESSERACT_PATH: /usr/bin/tesseract
+      MONGO_LOADER_URL: http://tomongo:8001
+      TOPIC_RAW: raw
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+
+    depends_on:
+      tomongo:
+        condition: service_started
+      kafka:
+        condition: service_healthy
+
+
+
+
+  tomongo:
+    build: ./MongoDB_Loader_Service
+    container_name: tomongo
+    ports:
+      - "8001:8001"
+    environment:
+      MONGO_URI: mongodb://mongodb:27017/
+      MONGO_DB: correspondents_network
+#      MONGO_COLLECTION: ordersandcustomers
+      PYTHONUNBUFFERED: 1
+      TOPIC: raw
+    depends_on:
+      kafka:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+
+  cleaner:
+    build: ./Clean_Service
+    container_name: cleaner
+
+    environment:
+      PYTHONUNBUFFERED: 1
+      TOPIC_RAW: raw
+      TOPIC_CLEAN: clean
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+    container_name: elasticsearch
+    environment:
+      - node.name=elasticsearch
+      - discovery.type=single-node
+      - xpack.security.enabled=false # ביטול אבטחה לצורך פיתוח מקומי קל
+      - bootstrap.memory_lock=true
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+
+
+  kafka:
+    image: confluentinc/cp-kafka:7.8.3
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_KRAFT_MODE: 'true'
+
+      CLUSTER_ID: '1L6g7nGhU-eAKfL--X25wo'
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+    healthcheck:
+      test: [ "CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - kafka_kraft:/var/lib/kafka/data
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+
+volumes:
+  kafka_kraft:
+  mysql_data:
+  esdata:
+    driver: local
