@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   api:
-    build: ./Ingestion_srvice
+    build: ./Ingestion_service
     container_name: app
     ports:
       - "8000:8000"
@@ -10,7 +10,7 @@ services:
       - "C:/Users/user/Downloads/tweet_images:/tweet_images"
     environment:
       PYTHONUNBUFFERED: 1
-      PROJECT_DIR: /app/tweet_images
+      PROJECT_DIR: /tweet_images
       TESSERACT_PATH: /usr/bin/tesseract
       MONGO_LOADER_URL: http://tomongo:8001
       TOPIC_RAW: raw
@@ -45,13 +45,24 @@ services:
   cleaner:
     build: ./Clean_Service
     container_name: cleaner
-
     environment:
       PYTHONUNBUFFERED: 1
       TOPIC_RAW: raw
       TOPIC_CLEAN: clean
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  analytics:
+    build: ./Analytics_Service
+    container_name: analytics
+    environment:
+      PYTHONUNBUFFERED: 1
+      TOPIC_ANALYTICS: analytics
+      TOPIC_CLEAN: clean
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     depends_on:
       kafka:
         condition: service_healthy

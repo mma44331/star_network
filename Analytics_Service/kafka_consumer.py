@@ -9,8 +9,8 @@ class KafkaConsumer:
                                   "group.id":group_id,
                                   'auto.offset.reset': 'earliest'})
         self.topic_name = topic_name
-        self.group_id = group_id
         self.logger = logger
+
 
     def start(self,callback):
         self.consumer.subscribe([self.topic_name])
@@ -25,6 +25,3 @@ class KafkaConsumer:
                     self.logger.error(f"Consumer error: {msg.error()}")
                     continue
             callback(json.loads(msg.value().decode('utf-8')))
-
-
-

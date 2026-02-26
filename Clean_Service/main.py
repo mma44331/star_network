@@ -1,7 +1,4 @@
-import os
-
 import logging
-
 from clean_config import CleanConfig
 from clean_orchestrator import CleanOrchestrator
 from kafka_publisher import KafkaPublisher
@@ -15,9 +12,9 @@ logger = logging.getLogger("CLEAN_SERVICE")
 
 
 config = CleanConfig()
-group_id = f"{config.topic_rae}_raw"
+group_id = f"{config.topic_raw}_raw"
 publisher = KafkaPublisher(config.bootstrap_servers,config.topic_clean,logger)
-consumer = KafkaConsumer(config.bootstrap_servers,config.topic_rae,group_id,logger)
+consumer = KafkaConsumer(config.bootstrap_servers,config.topic_raw,group_id,logger)
 cleaner = TextCleaner(logger)
 orchestrator = CleanOrchestrator(consumer,cleaner,publisher,logger)
 

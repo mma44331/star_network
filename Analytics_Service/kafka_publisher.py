@@ -1,4 +1,5 @@
 import json
+
 from confluent_kafka import Producer
 
 
@@ -15,4 +16,3 @@ class KafkaPublisher:
         self.producer.produce(self.topic_name, json_data)
         self.producer.flush()
         self.logger.info(f"Published event for {event_id} to Kafka topic {self.topic_name}")
-

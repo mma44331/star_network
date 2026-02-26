@@ -5,6 +5,7 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 nltk.download('stopwords')
 nltk.download('punkt')
+nltk.download('punkt_tab')
 
 
 class TextCleaner:
@@ -19,8 +20,10 @@ class TextCleaner:
         return " ".join(filter_text)
 
     def cleaner(self, text):
+        self.logger.info(text)
         text = text.lower()
         charts_to_remove = string.punctuation + '״׳•●'
-        text = text.translatr(str.maketrans('','',charts_to_remove))
+        text = text.translate(str.maketrans('','',charts_to_remove))
         text = self.stop_words(text)
+        self.logger.info(text)
         return text
