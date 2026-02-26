@@ -11,6 +11,7 @@ class KafkaPublisher:
 
 
     def publish(self, event):
+        self.logger.info(event)
         event_id = event.get('image_id')
         json_data = json.dumps(event, default=str).encode("utf-8")
         self.producer.produce(self.topic_name, json_data)

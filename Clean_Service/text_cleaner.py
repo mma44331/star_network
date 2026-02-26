@@ -11,19 +11,18 @@ nltk.download('punkt_tab')
 class TextCleaner:
     def __init__(self, logger):
         self.logger = logger
+        self.stop_words =set(stopwords.words("english"))
 
-    @staticmethod
-    def stop_words(text):
-        stop_words =set(stopwords.words("english"))
-        word_tokens = word_tokenize(text)
-        filter_text = [w for w in word_tokens if w not in stop_words]
-        return " ".join(filter_text)
 
     def cleaner(self, text):
+        if not text:
+            return  ""
         self.logger.info(text)
         text = text.lower()
-        charts_to_remove = string.punctuation + '״׳•●'
-        text = text.translate(str.maketrans('','',charts_to_remove))
-        text = self.stop_words(text)
-        self.logger.info(text)
-        return text
+        text = text.replace('’', '').replace('‘', '').replace('״', '').replace('׳', '')
+        text = re.sub(r'[^a-z0-9\s]', ' ', text)
+        word_tokens = word_tokenize(text)
+        filtered_text = [w for w in word_tokens if w not in self.stop_words and len(w) > 1]
+        cleaned_result = " ".join(filtered_text)
+        self.logger.info(cleaned_result)
+        return cleaned_result
